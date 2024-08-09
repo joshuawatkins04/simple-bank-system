@@ -7,6 +7,7 @@ struct Account {
     char last_name[15];
     char password[14];
     int account_number;
+    int account_balance;
 
     char* email;
     char user[10];
@@ -20,6 +21,10 @@ void login();
 void create_account();
 int validate_email();
 int generate_account_number();
+void deposit_money();
+void withdraw_money();
+void transfer_money();
+void manage_account();
 
 int main() {
     premenu();
@@ -86,6 +91,7 @@ void create_account() {
     printf("\n################ GENERATING ACC. NO. ################\n");
     a.account_number = generate_account_number();
     printf("Your account number is %d\n", a.account_number);
+    a.account_balance = 0;
 
     printf("Account successfully created");
 };
@@ -105,5 +111,20 @@ int generate_account_number() {
 }
 
 void menu() {
-    printf("\nSuccessfully logged in");
+    struct Account a;
+    printf("\nMenu:\n");
+    printf("Current Balance: %d\n", a.account_balance);
+    printf("1. Deposit Money\n");
+    printf("2. Withdraw Money\n");
+    printf("3. Transfer Money\n");
+    printf("4. Manage Account\n");
+    printf("5. Exit\n");
 };
+
+void deposit_money() {};
+
+void withdraw_money() {};
+
+void transfer_money() {};
+
+void manage_account() {};
