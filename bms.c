@@ -112,6 +112,8 @@ int generate_account_number() {
 
 void menu() {
     struct Account a;
+    int choice;
+
     printf("\nMenu:\n");
     printf("Current Balance: %d\n", a.account_balance);
     printf("1. Deposit Money\n");
@@ -119,6 +121,31 @@ void menu() {
     printf("3. Transfer Money\n");
     printf("4. Manage Account\n");
     printf("5. Exit\n");
+    printf("asdijf");
+
+
+    printf("\nChoose option: ");
+    scanf("%d", &choice);
+    switch (choice) {
+        case 1:
+            deposit_money();
+            break;
+        case 2:
+            withdraw_money();
+            break;
+        case 3:
+            transfer_money();
+            break;
+        case 4:
+            manage_account();
+            break;
+        case 5:
+            exit(0);
+        default:
+            printf("################ INVALID INPUT ################");
+            scanf("%d", &choice);
+            break;
+    }
 };
 
 void deposit_money() {};
