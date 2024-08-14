@@ -15,16 +15,16 @@ struct Account {
     int valid;
 };
 
-void premenu();
-void menu();
-void login();
-void create_account();
-int validate_email();
-int generate_account_number();
-void deposit_money();
-void withdraw_money();
-void transfer_money();
-void manage_account();
+// void premenu();
+// void menu();
+// void login();
+// void create_account();
+// int validate_email();
+// int generate_account_number();
+// void deposit_money();
+// void withdraw_money();
+// void transfer_money();
+// void manage_account();
 
 int main() {
     premenu();
