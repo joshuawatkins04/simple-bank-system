@@ -27,12 +27,13 @@ void transfer_money();
 void manage_account();
 
 int main() {
-    premenu();
-    menu();
+    struct Account a;
+    premenu(a);
+    menu(a);
     return 0;
 }
 
-void premenu() {
+void premenu(struct Account a) {
     int choice;
 
     printf("\n\nSelection option: Login (1) Create Account (2):\n");
@@ -42,21 +43,19 @@ void premenu() {
             login();
             break;
         case 2:
-            create_account();
+            create_account(a);
             break;
         default:
             printf("################ INVALID INPUT ################");
-            premenu();
+            premenu(a);
     }
 };
 
 void login() {
-    struct Account a;
-
     printf("\nEnter details below:\nAccount number: ");
-    scanf("%d", &a.account_number);
+    //scanf("%d", &a.account_number);
     printf("Password: ");
-    scanf("%s", &a.password);
+    //scanf("%s", &a.password);
 };
 
 /* 
@@ -65,8 +64,7 @@ void login() {
     - Need to fix account number generator to wider values
     - Then need to store this information into Account-Details.txt by writing it to it
 */
-void create_account() {
-    struct Account a;
+void create_account(struct Account a) {
     a.email = malloc(MAX_LENGTH);
     
     // Name
@@ -94,6 +92,16 @@ void create_account() {
     a.account_balance = 0;
 
     printf("Account successfully created");
+
+    FILE* accounts;
+    accounts = fopen("Account-Details.txt", "a");
+    fprintf(accounts, "Account Number: %d\nFirst Name: %s\nLast Name: %s\nPassword: %s\nAccount Balance: %d\n", a.account_number, a.first_name, a.last_name, a.password, a.account_balance);
+    fclose(accounts);
+    /*    char first_name[15];
+    char last_name[15];
+    char password[14];
+    int account_number;
+    int account_balance;*/
 };
 
 int validate_email(char* email) {
@@ -110,8 +118,7 @@ int generate_account_number() {
     return number;
 }
 
-void menu() {
-    struct Account a;
+void menu(struct Account a) {
     int choice;
 
     printf("\nMenu:\n");
@@ -121,7 +128,6 @@ void menu() {
     printf("3. Transfer Money\n");
     printf("4. Manage Account\n");
     printf("5. Exit\n");
-    printf("asdijf");
 
 
     printf("\nChoose option: ");
@@ -143,15 +149,23 @@ void menu() {
             exit(0);
         default:
             printf("################ INVALID INPUT ################");
-            scanf("%d", &choice);
-            break;
+            menu(a);
     }
 };
 
-void deposit_money() {};
+void deposit_money() {
+    printf("\nDeposit Money menu:\n");
 
-void withdraw_money() {};
+};
 
-void transfer_money() {};
+void withdraw_money() {
+    printf("\nWithrdaw Money menu:\n");
+};
 
-void manage_account() {};
+void transfer_money() {
+    printf("\nTransfer Money menu:\n");
+};
+
+void manage_account() {
+    printf("\nManage Account menu:\n");
+};
