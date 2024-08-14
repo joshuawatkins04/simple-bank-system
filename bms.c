@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #define MAX_LENGTH 256
 
 struct Account {
@@ -27,12 +28,18 @@ struct Account {
 // void manage_account();
 
 int main() {
-    premenu();
-    menu();
+    struct Account a;
+
+
+    printf("%d", generate_account_number());
+
+    premenu(a);
+
+
     return 0;
 }
 
-void premenu() {
+void premenu(struct Account a) {
     int choice;
 
     printf("\n\nSelection option: Login (1) Create Account (2):\n");
@@ -42,21 +49,19 @@ void premenu() {
             login();
             break;
         case 2:
-            create_account();
+            create_account(a);
             break;
         default:
             printf("################ INVALID INPUT ################");
-            premenu();
+            premenu(a);
     }
 };
 
-void login() {
-    struct Account a;
-
+void login(void) {
     printf("\nEnter details below:\nAccount number: ");
-    scanf("%d", &a.account_number);
+    //scanf("%d", &a.account_number);
     printf("Password: ");
-    scanf("%s", &a.password);
+    //scanf("%s", &a.password);
 };
 
 /* 
@@ -65,8 +70,7 @@ void login() {
     - Need to fix account number generator to wider values
     - Then need to store this information into Account-Details.txt by writing it to it
 */
-void create_account() {
-    struct Account a;
+void create_account(struct Account a) {
     a.email = malloc(MAX_LENGTH);
     
     // Name
@@ -94,6 +98,13 @@ void create_account() {
     a.account_balance = 0;
 
     printf("Account successfully created");
+
+    FILE* accounts;
+    accounts = fopen("Account-Details.txt", "a");
+    fprintf(accounts, "Account Number: %d\nFirst Name: %s\nLast Name: %s\nPassword: %s\nAccount Balance: %d\n", a.account_number, a.first_name, a.last_name, a.password, a.account_balance);
+    fclose(accounts);
+
+    menu(a);
 };
 
 int validate_email(char* email) {
@@ -103,15 +114,51 @@ int validate_email(char* email) {
 
 // In the future need to add a check to see if account number already exists
 int generate_account_number() {
-    int lower, upper, number;
-    lower = 10000000;
-    upper = 100000000;
-    number = (rand() % (upper - lower + 1)) + lower;
+    int lower = 10000000, upper = 100000000;
+    //int number = (rand() % (upper - lower)) + lower;
+    int number = 10008380;
+    char line[100];
+    char found = 0;
+    char valid = 0;
+    char str_number[sizeof(number)];
+
+    sprintf(str_number, "%d", number);
+
+    FILE* file;
+    file = fopen("Account-Details.txt", "r");
+
+    while (fread(line, sizeof(line), 1, file)) {
+        if (strcmp(str_number, ))
+    }
+
+    // Check if account number already exists to avoid duplicate account numbers
+    // FILE* file;
+    // do {
+    //     file = fopen("Account-Details.txt", "r");
+    //     if (file == NULL) {
+    //         printf("ERROR file empty or wrong file");
+    //         exit(0);
+    //     }
+    //     // while (fgets(line, sizeof(line), file)) {
+    //     //     printf(line);
+    //     //     if (strstr(line, str_number)) {
+    //     //         printf("Number found ");
+    //     //     }
+    //     // }
+    //     while (fgets(line, sizeof(line), file)) {
+    //         fscanf(file, , line);
+    //     }
+    //     if (!found) {
+    //         printf("Number not found");
+    //         valid = 1;
+    //     } 
+    // } while (!valid);
+
+    // fclose(file);
     return number;
 }
 
-void menu() {
-    struct Account a;
+void menu(struct Account a) {
     int choice;
 
     printf("\nMenu:\n");
@@ -121,8 +168,6 @@ void menu() {
     printf("3. Transfer Money\n");
     printf("4. Manage Account\n");
     printf("5. Exit\n");
-    printf("asdijf");
-
 
     printf("\nChoose option: ");
     scanf("%d", &choice);
@@ -143,15 +188,23 @@ void menu() {
             exit(0);
         default:
             printf("################ INVALID INPUT ################");
-            scanf("%d", &choice);
-            break;
+            menu(a);
     }
 };
 
-void deposit_money() {};
+void deposit_money() {
+    printf("\nDeposit Money menu:\n");
 
-void withdraw_money() {};
+};
 
-void transfer_money() {};
+void withdraw_money() {
+    printf("\nWithrdaw Money menu:\n");
+};
 
-void manage_account() {};
+void transfer_money() {
+    printf("\nTransfer Money menu:\n");
+};
+
+void manage_account() {
+    printf("\nManage Account menu:\n");
+};
