@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #define MAX_LENGTH 256
 
 struct Account {
@@ -28,8 +29,13 @@ void manage_account();
 
 int main() {
     struct Account a;
+
+
+    printf("%d", generate_account_number());
+
     premenu(a);
-    menu(a);
+
+
     return 0;
 }
 
@@ -51,7 +57,7 @@ void premenu(struct Account a) {
     }
 };
 
-void login() {
+void login(void) {
     printf("\nEnter details below:\nAccount number: ");
     //scanf("%d", &a.account_number);
     printf("Password: ");
@@ -97,11 +103,8 @@ void create_account(struct Account a) {
     accounts = fopen("Account-Details.txt", "a");
     fprintf(accounts, "Account Number: %d\nFirst Name: %s\nLast Name: %s\nPassword: %s\nAccount Balance: %d\n", a.account_number, a.first_name, a.last_name, a.password, a.account_balance);
     fclose(accounts);
-    /*    char first_name[15];
-    char last_name[15];
-    char password[14];
-    int account_number;
-    int account_balance;*/
+
+    menu(a);
 };
 
 int validate_email(char* email) {
@@ -111,10 +114,47 @@ int validate_email(char* email) {
 
 // In the future need to add a check to see if account number already exists
 int generate_account_number() {
-    int lower, upper, number;
-    lower = 10000000;
-    upper = 100000000;
-    number = (rand() % (upper - lower + 1)) + lower;
+    int lower = 10000000, upper = 100000000;
+    //int number = (rand() % (upper - lower)) + lower;
+    int number = 10008380;
+    char line[100];
+    char found = 0;
+    char valid = 0;
+    char str_number[sizeof(number)];
+
+    sprintf(str_number, "%d", number);
+
+    FILE* file;
+    file = fopen("Account-Details.txt", "r");
+
+    while (fread(line, sizeof(line), 1, file)) {
+        if (strcmp(str_number, ))
+    }
+
+    // Check if account number already exists to avoid duplicate account numbers
+    // FILE* file;
+    // do {
+    //     file = fopen("Account-Details.txt", "r");
+    //     if (file == NULL) {
+    //         printf("ERROR file empty or wrong file");
+    //         exit(0);
+    //     }
+    //     // while (fgets(line, sizeof(line), file)) {
+    //     //     printf(line);
+    //     //     if (strstr(line, str_number)) {
+    //     //         printf("Number found ");
+    //     //     }
+    //     // }
+    //     while (fgets(line, sizeof(line), file)) {
+    //         fscanf(file, , line);
+    //     }
+    //     if (!found) {
+    //         printf("Number not found");
+    //         valid = 1;
+    //     } 
+    // } while (!valid);
+
+    // fclose(file);
     return number;
 }
 
@@ -128,7 +168,6 @@ void menu(struct Account a) {
     printf("3. Transfer Money\n");
     printf("4. Manage Account\n");
     printf("5. Exit\n");
-
 
     printf("\nChoose option: ");
     scanf("%d", &choice);
