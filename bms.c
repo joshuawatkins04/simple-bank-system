@@ -6,6 +6,7 @@
 struct Account {
     char first_name[15];
     char last_name[15];
+    char username[30];
     char password[14];
     int account_number;
     int account_balance;
@@ -28,18 +29,11 @@ void transfer_money();
 void manage_account();
 
 int main() {
-    struct Account a;
-
-
-    printf("%d", generate_account_number());
-
-    premenu(a);
-
-
+    premenu();
     return 0;
 }
 
-void premenu(struct Account a) {
+void premenu() {
     int choice;
 
     printf("\n\nSelection option: Login (1) Create Account (2):\n");
@@ -49,19 +43,36 @@ void premenu(struct Account a) {
             login();
             break;
         case 2:
-            create_account(a);
+            create_account();
             break;
         default:
             printf("################ INVALID INPUT ################");
-            premenu(a);
+            premenu();
     }
 };
 
 void login(void) {
-    printf("\nEnter details below:\nAccount number: ");
-    //scanf("%d", &a.account_number);
-    printf("Password: ");
-    //scanf("%s", &a.password);
+    char username[30];
+    char password[14];
+    FILE* accounts;
+
+    accounts = fopen("Account-Details.txt", "r");
+    if (accounts == NULL) {
+        fputs("Error... File does not exist", stderr);
+        exit(1);
+    }
+
+    struct Account a;
+
+    printf("\nLogin below:\n");
+    printf("Username: ");
+    fgets(username, 30, stdin);
+    printf("\nPassword: ");
+    fgets(password, 14, stdin);
+
+    while (fread(&a, sizeof(a), 1, accounts)) {
+        // finish
+    }
 };
 
 /* 
@@ -70,12 +81,23 @@ void login(void) {
     - Need to fix account number generator to wider values
     - Then need to store this information into Account-Details.txt by writing it to it
 */
-void create_account(struct Account a) {
+void create_account() {
+    struct Account a;
     a.email = malloc(MAX_LENGTH);
+    FILE* accounts;
+    
+    accounts = fopen("Account-Details.txt", "a");
+    if (accounts == NULL) {
+        fputs("Error... File does not exist", stderr);
+        exit(1);
+    }
     
     // Name
     printf("\nAccount Creation:\nEnter your first and last name: ");
-    scanf("%s %s", &a.first_name, &a.last_name);
+    scanf("%c %c", a.first_name, a.last_name);
+
+    printf("\nEnter a username: ");
+    scanf("%s", a.username);
 
     // Email
     printf("\nEnter your new email: ");
@@ -89,7 +111,7 @@ void create_account(struct Account a) {
     
     // Password
     printf("\nEnter a new password (14 Characters Max): ");
-    scanf("%14s", &a.password);
+    scanf("%14s", a.password);
 
     // Randomly generated account number
     printf("\n################ GENERATING ACC. NO. ################\n");
@@ -97,14 +119,16 @@ void create_account(struct Account a) {
     printf("Your account number is %d\n", a.account_number);
     a.account_balance = 0;
 
-    printf("Account successfully created");
-
-    FILE* accounts;
-    accounts = fopen("Account-Details.txt", "a");
-    fprintf(accounts, "Account Number: %d\nFirst Name: %s\nLast Name: %s\nPassword: %s\nAccount Balance: %d\n", a.account_number, a.first_name, a.last_name, a.password, a.account_balance);
+    fwrite(&a, sizeof(a), 1, accounts);
     fclose(accounts);
 
-    menu(a);
+    printf("\nAccount successfully created\n");
+
+    
+    //fprintf(accounts, "Account Number: %d\nFirst Name: %s\nLast Name: %s\nUsername: %s\nPassword: %s\nAccount Balance: %d\n", a.account_number, a.first_name, a.last_name, a.username, a.password, a.account_balance);
+    //fclose(accounts);
+
+    login();
 };
 
 int validate_email(char* email) {
@@ -124,12 +148,12 @@ int generate_account_number() {
 
     sprintf(str_number, "%d", number);
 
-    FILE* file;
-    file = fopen("Account-Details.txt", "r");
+    // FILE* file;
+    // file = fopen("Account-Details.txt", "r");
 
-    while (fread(line, sizeof(line), 1, file)) {
-        if (strcmp(str_number, ))
-    }
+    // while (fread(line, sizeof(line), 1, file)) {
+    //     if (strcmp(str_number, ))
+    // }
 
     // Check if account number already exists to avoid duplicate account numbers
     // FILE* file;
