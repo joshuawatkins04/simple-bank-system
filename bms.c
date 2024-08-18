@@ -1,95 +1,156 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #define MAX_LENGTH 256
 
 struct Account {
     char first_name[15];
     char last_name[15];
+    char username[30];
     char password[14];
     int account_number;
     int account_balance;
 
     char* email;
-    char user[10];
-    char domain[4];
-    int valid;
 };
 
-// void premenu();
-// void menu();
-// void login();
-// void create_account();
-// int validate_email();
-// int generate_account_number();
-// void deposit_money();
-// void withdraw_money();
-// void transfer_money();
-// void manage_account();
+void premenu();
+void menu();
+void login();
+void create_account();
+bool validate_email();
+int generate_account_number();
+void deposit_money();
+void withdraw_money();
+void transfer_money();
+void manage_account();
+
 
 int main() {
-    struct Account a;
-
-
-    printf("%d", generate_account_number());
-
-    premenu(a);
-
-
+    premenu();
     return 0;
 }
 
-void premenu(struct Account a) {
+void premenu() {
     int choice;
 
     printf("\n\nSelection option: Login (1) Create Account (2):\n");
-    scanf("%d", &choice);
+    //scanf("%d", &choice);
+    fgets(choice, 15, stdin);
     switch (choice) {
         case 1:
             login();
             break;
         case 2:
-            create_account(a);
+            create_account();
             break;
         default:
             printf("################ INVALID INPUT ################");
-            premenu(a);
+            premenu();
     }
 };
 
 void login(void) {
-    printf("\nEnter details below:\nAccount number: ");
-    //scanf("%d", &a.account_number);
-    printf("Password: ");
-    //scanf("%s", &a.password);
+    char username[30];
+    char password[14];
+    FILE* file;
+
+    file = fopen("Account-Details.txt", "r");
+    if (file == NULL) {
+        fputs("Error... File does not exist", stderr);
+        exit(1);
+    }
+
+    struct Account a;
+
+    bool success = false;
+    char buffer[100];
+    char* get_string;
+
+    fflush(stdin);
+
+    printf("\nLogin below:\n");
+    printf("Username: ");
+    //scanf("%s", username);
+    fgets(username, 30, stdin);
+    // printf("\nPassword: ");
+    // printf("\n");
+    // fgets(password, 14, stdin);
+
+    while (!success) {
+        fgets(buffer, sizeof(buffer), file);
+ 
+        if (strcmp(buffer, "Username:\n") == 0) {
+            get_string = fgets(buffer, sizeof(buffer), file);
+            printf("\n%s\n", get_string);
+            if (strcmp(get_string, username) == 0) {
+                printf("VALID username");
+                success = true;
+            }
+        }
+        else if (feof(file)) {
+            printf("Invalid");
+            success = true;
+        }
+
+        // if (strcmp(buffer, "Account Number:\n") == 0) {
+        //     get_number = atoi(fgets(buffer, sizeof(buffer), file));
+        //     if (get_number == number) {
+    }
+
+    fclose(file);
+
+    // while (fread(&a, sizeof(a), 1, file)) {
+    //     //if (strcmp(username, a.username) == 0 && strcmp(password, a.password) == 0) {
+    //     if (strcmp(username, a.username) == 0) {
+    //         printf("\nLogin Successful");
+    //     }
+    //     else {
+    //         printf("\nIncorrect login details");
+    //     }
+    // }
+    // fclose(file);
 };
 
 /* 
     - Need to fix email sscanf(). Function validate_email(email) is running as expected but is validating
     slightly wrong emails such as 'jasdf@asdf' but will correctly find emails like 'sdf'
-    - Need to fix account number generator to wider values
-    - Then need to store this information into Account-Details.txt by writing it to it
 */
-void create_account(struct Account a) {
+void create_account() {
+    struct Account a;
     a.email = malloc(MAX_LENGTH);
+    FILE* accounts;
+    
+    accounts = fopen("Account-Details.txt", "a");
+    if (accounts == NULL) {
+        fputs("Error... File does not exist", stderr);
+        exit(1);
+    }
     
     // Name
-    printf("\nAccount Creation:\nEnter your first and last name: ");
-    scanf("%s %s", &a.first_name, &a.last_name);
+    printf("\nAccount Creation:\nEnter your first name: ");
+    scanf("%s", a.first_name);
+    printf("\nEnter your last name: ");
+    scanf("%s", a.last_name);
+
+    printf("\nEnter a username: ");
+    scanf("%s", a.username);
 
     // Email
     printf("\nEnter your new email: ");
     scanf("%s", a.email);
-    a.valid = validate_email(a.email);
-    while (a.valid != 2) {\
+    bool isValid = false;
+    isValid = validate_email(a.email);
+    while (!isValid) {
         printf("\n################ INVALID INPUT ################\nEnter different email: ");
         scanf("%s", a.email);
-        a.valid = validate_email(a.email);
+        isValid = validate_email(a.email);
     }
     
     // Password
     printf("\nEnter a new password (14 Characters Max): ");
-    scanf("%14s", &a.password);
+    scanf("%14s", a.password);
 
     // Randomly generated account number
     printf("\n################ GENERATING ACC. NO. ################\n");
@@ -97,68 +158,84 @@ void create_account(struct Account a) {
     printf("Your account number is %d\n", a.account_number);
     a.account_balance = 0;
 
-    printf("Account successfully created");
-
-    FILE* accounts;
-    accounts = fopen("Account-Details.txt", "a");
-    fprintf(accounts, "Account Number: %d\nFirst Name: %s\nLast Name: %s\nPassword: %s\nAccount Balance: %d\n", a.account_number, a.first_name, a.last_name, a.password, a.account_balance);
+    printf("\nAccount successfully created\n");
+    
+    fprintf(accounts, "\n\nAccount Number:\n%d\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d", a.account_number, a.first_name, a.last_name, a.username, a.password, a.email, a.account_balance);
     fclose(accounts);
 
-    menu(a);
+    login();
 };
 
-int validate_email(char* email) {
-    struct Account a;
-    return sscanf(email, "%[_a-zA-Z0-9.]@%[_a-zA-Z0-9.]", a.user, a.domain);
+bool validate_email(char* email) {
+    int atCount = 0;
+    
+    for (int i = 0; i < strlen(email); i++) {
+        if (email[i] == '@') {
+            atCount++;
+        }
+        if (email[i] == ' ' || email[i] == '/' || email[i] == ':'
+            || email[i] == ';' || email[i] == '<' || email[i] == '>'
+            || email[i] == ',' || email[i] == '[' || email[i] == ']') {
+            return false;
+        }
+    }
+
+    if (atCount == 1) {
+        if (email[0] != '@') {
+            char* dot = strchr(email, '.');
+
+            if (dot != NULL && dot > strchr(email, '@')) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 };
 
-// In the future need to add a check to see if account number already exists
 int generate_account_number() {
     int lower = 10000000, upper = 100000000;
-    //int number = (rand() % (upper - lower)) + lower;
-    int number = 10008380;
-    char line[100];
-    char found = 0;
-    char valid = 0;
-    char str_number[sizeof(number)];
+    int number = (rand() % (upper - lower)) + lower;
+    char buffer[100];
+    int get_number;
 
-    sprintf(str_number, "%d", number);
+    bool isDuplicate = false;
+    int duplicate_count = 0;
+    bool success = false;
 
     FILE* file;
     file = fopen("Account-Details.txt", "r");
 
-    while (fread(line, sizeof(line), 1, file)) {
-        if (strcmp(str_number, ))
+    if (file == NULL) {
+        printf("ERROR file empty or wrong file");
+        exit(0);
+    }
+    while (!success) {
+        fgets(buffer, sizeof(buffer), file);
+        
+        if (strcmp(buffer, "Account Number:\n") == 0) {
+            get_number = atoi(fgets(buffer, sizeof(buffer), file));
+            if (get_number == number) {
+                fclose(file);
+                isDuplicate = true;
+                number = (rand() % (upper - lower)) + lower;
+                file = fopen("Account-Details.txt", "r");
+                isDuplicate = false;
+            }
+        }
+        else if (feof(file) && !isDuplicate) {
+            printf("FIXED: %d", number);
+            success = true;
+        }
     }
 
-    // Check if account number already exists to avoid duplicate account numbers
-    // FILE* file;
-    // do {
-    //     file = fopen("Account-Details.txt", "r");
-    //     if (file == NULL) {
-    //         printf("ERROR file empty or wrong file");
-    //         exit(0);
-    //     }
-    //     // while (fgets(line, sizeof(line), file)) {
-    //     //     printf(line);
-    //     //     if (strstr(line, str_number)) {
-    //     //         printf("Number found ");
-    //     //     }
-    //     // }
-    //     while (fgets(line, sizeof(line), file)) {
-    //         fscanf(file, , line);
-    //     }
-    //     if (!found) {
-    //         printf("Number not found");
-    //         valid = 1;
-    //     } 
-    // } while (!valid);
+    fclose(file);
 
-    // fclose(file);
     return number;
 }
 
-void menu(struct Account a) {
+void menu() {
+    struct Account a;
     int choice;
 
     printf("\nMenu:\n");
