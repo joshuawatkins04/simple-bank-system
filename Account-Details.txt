@@ -322,3 +322,23 @@ Password:
 ui
 Account Balance:
 0
+
+Account Number:
+10019169
+First Name:
+asdf
+
+Last Name:
+asdf
+
+Username:
+asdf
+
+Password:
+asdf
+
+Email:
+asdf@asdfads.c
+
+Account Balance:
+0
