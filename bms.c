@@ -2,17 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#define MAX_LENGTH 256
 
 struct Account {
     char first_name[15];
     char last_name[15];
     char username[30];
+    char email[50];
     char password[14];
     int account_number;
     int account_balance;
-
-    char* email;
 };
 
 void premenu();
@@ -30,14 +28,15 @@ void manage_account();
 int main() {
     premenu();
     return 0;
-}
+};
 
 void premenu() {
+    char c[10];
     int choice;
 
-    printf("\n\nSelection option: Login (1) Create Account (2):\n");
-    //scanf("%d", &choice);
-    fgets(choice, 15, stdin);
+    printf("\n\nSelection option: Login (1) Create Account (2): ");
+    fgets(c, sizeof(c), stdin);
+    choice = atoi(c);
     switch (choice) {
         case 1:
             login();
@@ -65,6 +64,9 @@ void login(void) {
     struct Account a;
 
     bool success = false;
+    bool valid_username = false;
+    bool valid_password = false;
+    char valid = 0;
     char buffer[100];
     char* get_string;
 
@@ -72,54 +74,43 @@ void login(void) {
 
     printf("\nLogin below:\n");
     printf("Username: ");
-    //scanf("%s", username);
     fgets(username, 30, stdin);
-    // printf("\nPassword: ");
-    // printf("\n");
-    // fgets(password, 14, stdin);
+    printf("Password: ");
+    fgets(password, 14, stdin);
 
-    while (!success) {
+    while (!valid_username || !valid_password) {
         fgets(buffer, sizeof(buffer), file);
  
         if (strcmp(buffer, "Username:\n") == 0) {
             get_string = fgets(buffer, sizeof(buffer), file);
-            printf("\n%s\n", get_string);
             if (strcmp(get_string, username) == 0) {
-                printf("VALID username");
-                success = true;
+                valid_username = true;
             }
+        } else if (strcmp(buffer, "Password:\n") == 0) {
+            get_string = fgets(buffer, sizeof(buffer), file);
+            if (strcmp(get_string, password) == 0) {
+                valid_password = true;
+            }
+        } else if (valid_username && valid_password) {
+            menu();
+        } else if (feof(file)) {
+            printf("\nInvalid username or password\n");
+            login();
         }
-        else if (feof(file)) {
-            printf("Invalid");
-            success = true;
-        }
-
-        // if (strcmp(buffer, "Account Number:\n") == 0) {
-        //     get_number = atoi(fgets(buffer, sizeof(buffer), file));
-        //     if (get_number == number) {
     }
 
     fclose(file);
 
-    // while (fread(&a, sizeof(a), 1, file)) {
-    //     //if (strcmp(username, a.username) == 0 && strcmp(password, a.password) == 0) {
-    //     if (strcmp(username, a.username) == 0) {
-    //         printf("\nLogin Successful");
-    //     }
-    //     else {
-    //         printf("\nIncorrect login details");
-    //     }
-    // }
-    // fclose(file);
+    menu();
 };
 
-/* 
-    - Need to fix email sscanf(). Function validate_email(email) is running as expected but is validating
-    slightly wrong emails such as 'jasdf@asdf' but will correctly find emails like 'sdf'
+/*
+    This function is called when the user selects the option to create an account in the premenu() function.
+    It has the role of collecting accurate and valid user input to then append this information to the 
+    Account-Details.txt file.
 */
 void create_account() {
     struct Account a;
-    a.email = malloc(MAX_LENGTH);
     FILE* accounts;
     
     accounts = fopen("Account-Details.txt", "a");
@@ -128,31 +119,27 @@ void create_account() {
         exit(1);
     }
     
-    // Name
     printf("\nAccount Creation:\nEnter your first name: ");
-    scanf("%s", a.first_name);
+    fgets(a.first_name, sizeof(a.first_name), stdin);
     printf("\nEnter your last name: ");
-    scanf("%s", a.last_name);
+    fgets(a.last_name, sizeof(a.last_name), stdin);
 
     printf("\nEnter a username: ");
-    scanf("%s", a.username);
+    fgets(a.username, sizeof(a.username), stdin);
 
-    // Email
     printf("\nEnter your new email: ");
-    scanf("%s", a.email);
+    fgets(a.email, sizeof(a.email), stdin);
     bool isValid = false;
     isValid = validate_email(a.email);
     while (!isValid) {
         printf("\n################ INVALID INPUT ################\nEnter different email: ");
-        scanf("%s", a.email);
+        fgets(a.email, sizeof(a.email), stdin);
         isValid = validate_email(a.email);
     }
-    
-    // Password
-    printf("\nEnter a new password (14 Characters Max): ");
-    scanf("%14s", a.password);
 
-    // Randomly generated account number
+    printf("\nEnter a new password (14 Characters Max): ");
+    fgets(a.password, sizeof(a.password), stdin);
+
     printf("\n################ GENERATING ACC. NO. ################\n");
     a.account_number = generate_account_number();
     printf("Your account number is %d\n", a.account_number);
@@ -166,6 +153,11 @@ void create_account() {
     login();
 };
 
+/*
+    This function has the role of validating whether the input from the user for the email section is correct.
+    It achieves this by splitting the string into an array of strings to validate each section and also detects
+    whether invalid characters have been inputted.
+*/
 bool validate_email(char* email) {
     int atCount = 0;
     
@@ -193,6 +185,10 @@ bool validate_email(char* email) {
     return false;
 };
 
+/*
+    Function used to generate a unique account number for each account created. Has a while loop to search
+    through the Account-Details.txt file to detect whether the number that was generated was unique.
+*/
 int generate_account_number() {
     int lower = 10000000, upper = 100000000;
     int number = (rand() % (upper - lower)) + lower;
@@ -224,7 +220,6 @@ int generate_account_number() {
             }
         }
         else if (feof(file) && !isDuplicate) {
-            printf("FIXED: %d", number);
             success = true;
         }
     }
@@ -234,9 +229,15 @@ int generate_account_number() {
     return number;
 }
 
+/*
+    This function is called once the user has properly logged into the system. Its purpose is to collect user
+    input to then access different parts of the system through functions in order to carry out operations
+    such as depositing money or changing account details.
+*/
 void menu() {
     struct Account a;
     int choice;
+    char c[10];
 
     printf("\nMenu:\n");
     printf("Current Balance: %d\n", a.account_balance);
@@ -247,7 +248,8 @@ void menu() {
     printf("5. Exit\n");
 
     printf("\nChoose option: ");
-    scanf("%d", &choice);
+    fgets(c, sizeof(c), stdin);
+    choice = atoi(c);
     switch (choice) {
         case 1:
             deposit_money();
