@@ -24,7 +24,6 @@ void withdraw_money();
 void transfer_money();
 void manage_account();
 
-
 int main() {
     premenu();
     return 0;
@@ -146,8 +145,8 @@ void create_account() {
     a.account_balance = 0;
 
     printf("\nAccount successfully created\n");
-    
-    fprintf(accounts, "\n\nAccount Number:\n%d\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d", a.account_number, a.first_name, a.last_name, a.username, a.password, a.email, a.account_balance);
+
+    fprintf(accounts, "\n\n-----------------------------------\nAccount Number:\n%d\n\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d\n-----------------------------------", a.account_number, a.first_name, a.last_name, a.username, a.password, a.email, a.account_balance);
     fclose(accounts);
 
     login();
