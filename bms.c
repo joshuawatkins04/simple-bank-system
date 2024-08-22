@@ -14,8 +14,8 @@ struct Account {
 };
 
 void premenu();
-void menu();
-void login();
+void menu(struct Account a);
+void login(struct Account a, char x);
 void create_account();
 bool validate_email();
 int generate_account_number();
@@ -30,6 +30,7 @@ int main() {
 };
 
 void premenu() {
+    struct Account a;
     char c[10];
     int choice;
 
@@ -38,7 +39,8 @@ void premenu() {
     choice = atoi(c);
     switch (choice) {
         case 1:
-            login();
+            // need to initialise a values before login in to pass in correct struct
+            login(a, 2);
             break;
         case 2:
             create_account();
@@ -49,7 +51,7 @@ void premenu() {
     }
 };
 
-void login(void) {
+void login(struct Account a, char x) {
     char username[30];
     char password[14];
     FILE* file;
@@ -60,7 +62,7 @@ void login(void) {
         exit(1);
     }
 
-    struct Account a;
+    //struct Account a;
 
     bool success = false;
     bool valid_username = false;
@@ -90,17 +92,23 @@ void login(void) {
             if (strcmp(get_string, password) == 0) {
                 valid_password = true;
             }
-        } else if (valid_username && valid_password) {
-            menu();
         } else if (feof(file)) {
             printf("\nInvalid username or password\n");
-            login();
+            login(a, x);
         }
+    }
+
+    // x == 1 means has 'a' already initialised, x == 2 means not initialised
+    if (x == 1) {
+        menu(a);
+    }
+    if (x == 2) {
+        
     }
 
     fclose(file);
 
-    menu();
+    menu(a);
 };
 
 /*
@@ -125,7 +133,7 @@ void create_account() {
 
     printf("\nEnter a username: ");
     fgets(a.username, sizeof(a.username), stdin);
-
+    
     printf("\nEnter your new email: ");
     fgets(a.email, sizeof(a.email), stdin);
     bool isValid = false;
@@ -146,10 +154,11 @@ void create_account() {
 
     printf("\nAccount successfully created\n");
 
-    fprintf(accounts, "\n\n-----------------------------------\nAccount Number:\n%d\n\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d\n-----------------------------------", a.account_number, a.first_name, a.last_name, a.username, a.password, a.email, a.account_balance);
+    //fprintf(accounts, "\n\n-----------------------------------\nAccount Number:\n%d\n\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d\n-----------------------------------", a.account_number, a.first_name, a.last_name, a.username, a.password, a.email, a.account_balance);
+    fprintf(accounts, "Username: %s Password: %s AccountNum: %d AccountBal: %d FirstName: %s LastName: %s Email: %s\n", a.username, a.password, a.account_number, a.account_balance, a.first_name, a.last_name, a.email);
     fclose(accounts);
 
-    login();
+    login(a, 1);
 };
 
 /*
@@ -233,12 +242,11 @@ int generate_account_number() {
     input to then access different parts of the system through functions in order to carry out operations
     such as depositing money or changing account details.
 */
-void menu() {
-    struct Account a;
+void menu(struct Account a) {
     int choice;
     char c[10];
 
-    printf("\nMenu:\n");
+    printf("\nMenu:\nWelcome back %s!\n", a.first_name);
     printf("Current Balance: %d\n", a.account_balance);
     printf("1. Deposit Money\n");
     printf("2. Withdraw Money\n");
@@ -251,7 +259,7 @@ void menu() {
     choice = atoi(c);
     switch (choice) {
         case 1:
-            deposit_money();
+            deposit_money(a);
             break;
         case 2:
             withdraw_money();
@@ -270,9 +278,24 @@ void menu() {
     }
 };
 
-void deposit_money() {
-    printf("\nDeposit Money menu:\n");
+void deposit_money(struct Account a) {
+    //struct Account a;
+    int amount = 0;
+    char c[10];
 
+    printf("\nDeposit Money menu:\n");
+    printf("Current Balance: %d\n", a.account_balance);
+    printf("Deposit money: ");
+    fgets(c, sizeof(c), stdin);
+    amount = atoi(c);
+    while (amount <= 0) {
+        printf("\nIncorrect input. Enter amount to deposit: ");
+        fgets(c, sizeof(c), stdin);
+        amount = atoi(c);
+    }
+    a.account_balance += amount;
+    printf("Account balance: %d and amount: %d", a.account_balance, amount);
+    menu(a);
 };
 
 void withdraw_money() {

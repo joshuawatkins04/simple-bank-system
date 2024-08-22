@@ -1,47 +1,18 @@
+Username: wato
+ Password: abc
+ AccountNum: 10000041 AccountBal: 0 FirstName: josh
+ LastName: watkins
+ Email: josh@josh.cmo
 
+Username: af
+ Password: adsf
+ AccountNum: 10000041 AccountBal: 0 FirstName: jdals
+ LastName: dsf
+ Email: ddj@df.c
 
------------------------------------
-Account Number:
-10000041
+Username: sdaf
+ Password: adsf
+ AccountNum: 10000041 AccountBal: 0 FirstName: asdf
+ LastName: asdf
+ Email: df@dasf.c
 
-First Name:
-Joshua
-
-Last Name:
-Watkins
-
-Username:
-Wato
-
-Password:
-testing123
-
-Email:
-joshua@watkinsfamily.com.au
-
-Account Balance:
-0
------------------------------------
-
------------------------------------
-Account Number:
-10018467
-
-First Name:
-John
-
-Last Name:
-Doe
-
-Username:
-Johny
-
-Password:
-johncool
-
-Email:
-john@johny.com
-
-Account Balance:
-0
------------------------------------
