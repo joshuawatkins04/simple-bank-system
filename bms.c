@@ -2,41 +2,44 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-
-struct Account {
-    char first_name[15];
-    char last_name[15];
-    char username[30];
-    char email[50];
-    char password[14];
-    int account_number;
-    int account_balance;
-};
+#include <ctype.h>
+#include <openssl/evp.h>
+#include "database.h"
 
 void premenu();
 void menu();
 void login();
 void create_account();
-bool validate_email();
-int generate_account_number();
+void hash_password(const char* password, char* hash_output);
+bool validate_email(const char* email);
 void deposit_money();
 void withdraw_money();
 void transfer_money();
 void manage_account();
+void flush_input();
 
 
 int main() {
+    sqlite3* db = open_database();
+    create_table(db);
+    sqlite3_close(db);
+
     premenu();
-    return 0;
-};
+}
 
 void premenu() {
-    char c[10];
     int choice;
 
-    printf("\n\nSelection option: Login (1) Create Account (2): ");
-    fgets(c, sizeof(c), stdin);
-    choice = atoi(c);
+    printf("\n\nSelection option: Login (1) Create Account (2):\n");
+
+    while (true) {
+        if (scanf("%d", &choice) == 1 && (choice == 1 || choice == 2)) {
+            break;
+        }
+        printf("################ INVALID INPUT ################");
+        while (getchar() != '\n');
+    }
+
     switch (choice) {
         case 1:
             login();
@@ -44,230 +47,170 @@ void premenu() {
         case 2:
             create_account();
             break;
-        default:
-            printf("################ INVALID INPUT ################");
-            premenu();
     }
 };
 
-void login(void) {
-    char username[30];
-    char password[14];
-    FILE* file;
+void login() {
+    sqlite3* db = open_database();
 
-    file = fopen("Account-Details.txt", "r");
-    if (file == NULL) {
-        fputs("Error... File does not exist", stderr);
-        exit(1);
-    }
-
-    struct Account a;
-
-    bool success = false;
-    bool valid_username = false;
-    bool valid_password = false;
-    char valid = 0;
-    char buffer[100];
-    char* get_string;
-
-    fflush(stdin);
+    char username[30], password[14];
 
     printf("\nLogin below:\n");
-    printf("Username: ");
-    fgets(username, 30, stdin);
-    printf("Password: ");
-    fgets(password, 14, stdin);
 
-    while (!valid_username || !valid_password) {
-        fgets(buffer, sizeof(buffer), file);
- 
-        if (strcmp(buffer, "Username:\n") == 0) {
-            get_string = fgets(buffer, sizeof(buffer), file);
-            if (strcmp(get_string, username) == 0) {
-                valid_username = true;
-            }
-        } else if (strcmp(buffer, "Password:\n") == 0) {
-            get_string = fgets(buffer, sizeof(buffer), file);
-            if (strcmp(get_string, password) == 0) {
-                valid_password = true;
-            }
-        } else if (valid_username && valid_password) {
-            menu();
-        } else if (feof(file)) {
-            printf("\nInvalid username or password\n");
-            login();
-        }
+    printf("Username: ");
+    scanf("%s", username);
+    flush_input();
+
+    printf("Password: ");
+    scanf("%s", password);
+    flush_input();
+
+    if (verify_login(db, username, password)) {
+        printf("Login successful!\n");
+    } else {
+        printf("Invalid username or password.\n");
+        login();
     }
 
-    fclose(file);
+    sqlite3_close(db);
 
     menu();
 };
 
-/*
-    This function is called when the user selects the option to create an account in the premenu() function.
-    It has the role of collecting accurate and valid user input to then append this information to the 
-    Account-Details.txt file.
-*/
 void create_account() {
-    struct Account a;
-    FILE* accounts;
-    
-    accounts = fopen("Account-Details.txt", "a");
-    if (accounts == NULL) {
-        fputs("Error... File does not exist", stderr);
-        exit(1);
+    sqlite3* db = open_database();
+    char hashed_password[65], email[40], username[30], first_name[15], last_name[15], password[14];
+    int account_number, balance = 0;
+
+    printf("\nAccount Creation:\n");
+
+    printf("Enter your first name: ");
+    scanf("%14s", first_name);
+    flush_input();
+
+    printf("Enter your last name: ");
+    scanf("%14s", last_name);
+    flush_input();
+
+    printf("Enter a username: ");
+    scanf("%29s", username);
+    flush_input();
+
+    bool valid_email = false;
+    while (!valid_email) {
+        printf("Enter your email: ");
+        scanf("%39s", email);
+        flush_input();
+
+        if (validate_email(email)) {
+            valid_email = true;
+        } else {
+            printf("################ INVALID INPUT ################\n");
+        }
     }
-    
-    printf("\nAccount Creation:\nEnter your first name: ");
-    fgets(a.first_name, sizeof(a.first_name), stdin);
-    printf("\nEnter your last name: ");
-    fgets(a.last_name, sizeof(a.last_name), stdin);
 
-    printf("\nEnter a username: ");
-    fgets(a.username, sizeof(a.username), stdin);
+    printf("Enter a new password (14 Characters Max): ");
+    scanf("%13s", password);
+    hash_password(password, hashed_password);
+    flush_input();
 
-    printf("\nEnter your new email: ");
-    fgets(a.email, sizeof(a.email), stdin);
-    bool isValid = false;
-    isValid = validate_email(a.email);
-    while (!isValid) {
-        printf("\n################ INVALID INPUT ################\nEnter different email: ");
-        fgets(a.email, sizeof(a.email), stdin);
-        isValid = validate_email(a.email);
+    account_number = generate_unique_account_number(db);
+    if (account_number == -1) {
+        printf("Error generating account number.\n");
+        sqlite3_close(db);
+        return;
     }
 
-    printf("\nEnter a new password (14 Characters Max): ");
-    fgets(a.password, sizeof(a.password), stdin);
+    insert_user(db, first_name, last_name, username, hashed_password, email, account_number, balance);
+    printf("\nAccount successfully created. Your account number is %d\n", account_number);
 
-    printf("\n################ GENERATING ACC. NO. ################\n");
-    a.account_number = generate_account_number();
-    printf("Your account number is %d\n", a.account_number);
-    a.account_balance = 0;
+    sqlite3_close(db);
 
-    printf("\nAccount successfully created\n");
-    
-    fprintf(accounts, "\n\nAccount Number:\n%d\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d", a.account_number, a.first_name, a.last_name, a.username, a.password, a.email, a.account_balance);
-    fclose(accounts);
-
-    login();
+    menu();
 };
 
-/*
-    This function has the role of validating whether the input from the user for the email section is correct.
-    It achieves this by splitting the string into an array of strings to validate each section and also detects
-    whether invalid characters have been inputted.
-*/
-bool validate_email(char* email) {
-    int atCount = 0;
-    
+void hash_password(const char* password, char* hash_output) {
+    unsigned char hash[32];
+    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+
+    EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+    EVP_DigestUpdate(mdctx, password, strlen(password));
+    EVP_DigestFinal_ex(mdctx, hash, NULL);
+    EVP_MD_CTX_free(mdctx);
+
+    for (int i = 0; i < sizeof(hash); i++) {
+        sprintf(hash_output + (i * 2), "%02x", hash[i]);
+    }
+}
+
+bool validate_email(const char* email) {
+    int at_count = 0;
+    int dot_count = 0;
+    const char* at_ptr = NULL;
+
     for (int i = 0; i < strlen(email); i++) {
         if (email[i] == '@') {
-            atCount++;
+            at_count++;
+            at_ptr = &email[i];
+        } else if (email[i] == '.') {
+            dot_count++;
         }
-        if (email[i] == ' ' || email[i] == '/' || email[i] == ':'
-            || email[i] == ';' || email[i] == '<' || email[i] == '>'
-            || email[i] == ',' || email[i] == '[' || email[i] == ']') {
+        if (isspace(email[i]) || strchr("/:;<>[]", email[i])) {
             return false;
         }
     }
 
-    if (atCount == 1) {
-        if (email[0] != '@') {
-            char* dot = strchr(email, '.');
-
-            if (dot != NULL && dot > strchr(email, '@')) {
-                return true;
-            }
-        }
+    if (at_count == 1 && dot_count >= 1 && at_ptr && strchr(at_ptr, '.')) {
+        return true;
     }
 
     return false;
 };
 
-/*
-    Function used to generate a unique account number for each account created. Has a while loop to search
-    through the Account-Details.txt file to detect whether the number that was generated was unique.
-*/
-int generate_account_number() {
-    int lower = 10000000, upper = 100000000;
-    int number = (rand() % (upper - lower)) + lower;
-    char buffer[100];
-    int get_number;
-
-    bool isDuplicate = false;
-    int duplicate_count = 0;
-    bool success = false;
-
-    FILE* file;
-    file = fopen("Account-Details.txt", "r");
-
-    if (file == NULL) {
-        printf("ERROR file empty or wrong file");
-        exit(0);
-    }
-    while (!success) {
-        fgets(buffer, sizeof(buffer), file);
-        
-        if (strcmp(buffer, "Account Number:\n") == 0) {
-            get_number = atoi(fgets(buffer, sizeof(buffer), file));
-            if (get_number == number) {
-                fclose(file);
-                isDuplicate = true;
-                number = (rand() % (upper - lower)) + lower;
-                file = fopen("Account-Details.txt", "r");
-                isDuplicate = false;
-            }
-        }
-        else if (feof(file) && !isDuplicate) {
-            success = true;
-        }
-    }
-
-    fclose(file);
-
-    return number;
+void flush_input() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
 }
 
-/*
-    This function is called once the user has properly logged into the system. Its purpose is to collect user
-    input to then access different parts of the system through functions in order to carry out operations
-    such as depositing money or changing account details.
-*/
 void menu() {
-    struct Account a;
     int choice;
-    char c[10];
 
-    printf("\nMenu:\n");
-    printf("Current Balance: %d\n", a.account_balance);
-    printf("1. Deposit Money\n");
-    printf("2. Withdraw Money\n");
-    printf("3. Transfer Money\n");
-    printf("4. Manage Account\n");
-    printf("5. Exit\n");
+    while (true) {
+        printf("\nMenu:\n");
+        printf("1. Deposit Money\n");
+        printf("2. Withdraw Money\n");
+        printf("3. Transfer Money\n");
+        printf("4. Manage Account\n");
+        printf("5. Exit\n");
 
-    printf("\nChoose option: ");
-    fgets(c, sizeof(c), stdin);
-    choice = atoi(c);
-    switch (choice) {
-        case 1:
-            deposit_money();
-            break;
-        case 2:
-            withdraw_money();
-            break;
-        case 3:
-            transfer_money();
-            break;
-        case 4:
-            manage_account();
-            break;
-        case 5:
-            exit(0);
-        default:
-            printf("################ INVALID INPUT ################");
-            menu(a);
+        printf("\nChoose option: ");
+        if (scanf("%d", &choice) != 1) {
+            printf("################ INVALID INPUT ################\n");
+            flush_input();
+            continue;
+        }
+
+        flush_input();
+
+        switch (choice) {
+            case 1:
+                deposit_money();
+                break;
+            case 2:
+                withdraw_money();
+                break;
+            case 3:
+                transfer_money();
+                break;
+            case 4:
+                manage_account();
+                break;
+            case 5:
+                exit(0);
+            default:
+                printf("################ INVALID INPUT ################");
+                break;
+        }
     }
 };
 
