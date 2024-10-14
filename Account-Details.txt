@@ -1,0 +1,30 @@
+Account Number:
+10000041
+First Name:
+Josh
+Last Name:
+Watkins
+Username: 
+wato
+Password: 
+asdf
+Email:
+wato@wato.c
+Account Balance:
+0
+
+Account Number:
+10000041
+First Name:
+Johny
+Last Name:
+chik
+Username:
+asd
+Password:
+asdf
+Email:
+asdf@dsfa.
+Account Balance:
+0
+

@@ -30,6 +30,7 @@ void deposit_money();
 void withdraw_money();
 void transfer_money();
 void manage_account();
+void flush_input();
 
 
 int main() {
@@ -72,18 +73,23 @@ void login(void) {
         exit(1);
     }
 
-    fflush(stdin);
-
     printf("\nLogin below:\n");
+
+    flush_input();
     printf("Username: ");
     if (fgets(input_username, sizeof(input_username), stdin) == NULL) {
         printf("Error reading username.\n");
         fclose(file);
+        return;
     }
     input_username[strcspn(input_username, "\n")] = 0;
 
     printf("Password: ");
-    fgets(input_password, 14, stdin);
+    if (fgets(input_password, sizeof(input_password), stdin) == NULL) {
+        printf("Error reading password.\n");
+        fclose(file);
+        return;
+    }
     input_password[strcspn(input_password, "\n")] = 0;
 
     bool login_success = false;
@@ -166,6 +172,8 @@ void create_account() {
     write_account_to_file(accounts_file, &new_account);
 
     fclose(accounts_file);
+
+    menu();
 };
 
 bool validate_email(const char* email) {
@@ -217,15 +225,17 @@ bool check_duplicate(FILE* file, int account_number) {
 }
 
 void write_account_to_file(FILE* file, struct Account* account) {
-    fprintf(file, "Account Number:\n%d\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d\n\n",
+    if (fprintf(file, "Account Number:\n%d\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d\n\n",
         account->account_number,
         account->first_name,
         account->last_name,
         account->username,
         account->password,
         account->email,
-        account->account_balance
-    );
+        account->account_balance)< 0) {
+        fprintf(stderr, "Error writing account info to file.\n");
+        exit(1);
+    }
 }
 
 void flush_input() {
@@ -236,34 +246,42 @@ void flush_input() {
 void menu() {
     int choice;
 
-    printf("\nMenu:\n");
-    printf("1. Deposit Money\n");
-    printf("2. Withdraw Money\n");
-    printf("3. Transfer Money\n");
-    printf("4. Manage Account\n");
-    printf("5. Exit\n");
+    while (true) {
+        printf("\nMenu:\n");
+        printf("1. Deposit Money\n");
+        printf("2. Withdraw Money\n");
+        printf("3. Transfer Money\n");
+        printf("4. Manage Account\n");
+        printf("5. Exit\n");
 
-    printf("\nChoose option: ");
-    scanf("%d", &choice);
+        printf("\nChoose option: ");
+        if (scanf("%d", &choice) != 1) {
+            printf("################ INVALID INPUT ################\n");
+            flush_input();
+            continue;
+        }
 
-    switch (choice) {
-        case 1:
-            deposit_money();
-            break;
-        case 2:
-            withdraw_money();
-            break;
-        case 3:
-            transfer_money();
-            break;
-        case 4:
-            manage_account();
-            break;
-        case 5:
-            exit(0);
-        default:
-            printf("################ INVALID INPUT ################");
-            menu();
+        flush_input();
+
+        switch (choice) {
+            case 1:
+                deposit_money();
+                break;
+            case 2:
+                withdraw_money();
+                break;
+            case 3:
+                transfer_money();
+                break;
+            case 4:
+                manage_account();
+                break;
+            case 5:
+                exit(0);
+            default:
+                printf("################ INVALID INPUT ################");
+                break;
+        }
     }
 };
 
