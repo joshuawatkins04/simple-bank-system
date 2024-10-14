@@ -16,6 +16,8 @@ void create_table(sqlite3* db) {
     const char* sql = 
         "CREATE TABLE IF NOT EXISTS Users ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "first_name TEXT, "
+        "last_name TEXT, "
         "username TEXT UNIQUE, "
         "password TEXT, "
         "email TEXT, "
@@ -30,13 +32,15 @@ void create_table(sqlite3* db) {
     }
 }
 
-void insert_user(sqlite3* db, const char* username, const char* password, 
-        const char* email, int account_number, int balance) {
-    char sql[256];
+void insert_user(sqlite3* db, const char* first_name, const char* last_name,
+        const char* username, const char* password, const char* email, 
+        int account_number, int balance) {
+    
+    char sql[512];
     snprintf(sql, sizeof(sql),
-        "INSERT INTO Users (username, password, email, account_number, balance) "
-        "VALUES ('%s', '%s', '%s', %d, %d);",
-        username, password, email, account_number, balance
+        "INSERT INTO Users (first_name, last_name, username, password, email, account_number, balance) "
+        "VALUES ('%s', '%s', '%s', '%s', '%s', %d, %d);",
+        first_name, last_name, username, password, email, account_number, balance
     );
 
     char* err_msg = NULL;

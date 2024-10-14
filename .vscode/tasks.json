@@ -1,6 +1,51 @@
 {
     "tasks": [
         {
+            "label": "build",
+            "type": "shell",
+            "command": "gcc",
+            "args": [
+                "bms.c",
+                "database.c",
+                "-o",
+                "bms",
+                "-lsqlite3",
+                "-lcrypto",
+                "-lssl",
+                "-I",
+                "C:/mingw64/include",
+                "-I",
+                "C:/Program Files/OpenSSL-Win64/include",
+                "-L",
+                "C:/Program Files/OpenSSL-Win64/lib"
+                // "bms.c",
+                // "database.c",
+                // "-o",
+                // "bms",
+                // "-lsqlite3",
+                // "-lcrypto",
+                // "-lssl",
+                // "-I",
+                // "C:/mingw64/include",
+                // "-L",
+                // "C:/Program Files/OpenSSL-Win64/include",
+                // "-L",
+                // "C:/mingw64/lib",
+                // "-L",
+                // "C:/mingw64/bin",
+                // "-L",
+                // "C:/Program Files/OpenSSL-Win64/lib",
+                // "-L",
+                // "C:/Program Files/OpenSSL-Win64/bin"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "Compile C program with SQLite"
+        },
+        {
             "type": "cppbuild",
             "label": "C/C++: gcc.exe build active file",
             "command": "C:\\msys64\\ucrt64\\bin\\gcc.exe",

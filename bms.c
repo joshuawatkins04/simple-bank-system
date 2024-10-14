@@ -3,29 +3,15 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <openssl/evp.h>
 #include "database.h"
-
-#define MAX_LENGTH 256
-
-struct Account {
-    char email[40];
-    char username[30];
-    char first_name[15];
-    char last_name[15];
-    char password[14];
-    int account_number;
-    int account_balance;
-};
 
 void premenu();
 void menu();
 void login();
-// bool read_account_from_file(FILE* file, struct Account* account);
-// bool validate_login(struct Account* account, char* input_username, char* input_password);
 void create_account();
+void hash_password(const char* password, char* hash_output);
 bool validate_email(const char* email);
-// bool check_duplicate(FILE* file, int account_number);
-// void write_account_to_file(FILE* file, struct Account* account);
 void deposit_money();
 void withdraw_money();
 void transfer_money();
@@ -83,40 +69,37 @@ void login() {
         printf("Login successful!\n");
     } else {
         printf("Invalid username or password.\n");
+        login();
     }
 
     sqlite3_close(db);
+
+    menu();
 };
 
-
-/* 
-    - Need to fix email sscanf(). Function validate_email(email) is running as expected but is validating
-    slightly wrong emails such as 'jasdf@asdf' but will correctly find emails like 'sdf'
-*/
 void create_account() {
     sqlite3* db = open_database();
-    char username[30], password[14], email[40];
-    int account_number;
-    
+    char hashed_password[65], email[40], username[30], first_name[15], last_name[15], password[14];
+    int account_number, balance = 0;
 
     printf("\nAccount Creation:\n");
 
     printf("Enter your first name: ");
-    scanf("%s", &first_name);
+    scanf("%14s", first_name);
     flush_input();
 
-    printf("\nEnter your last name: ");
-    scanf("%s", &last_name);
+    printf("Enter your last name: ");
+    scanf("%14s", last_name);
     flush_input();
 
-    printf("\nEnter a username: ");
-    scanf("%s", username);
+    printf("Enter a username: ");
+    scanf("%29s", username);
     flush_input();
 
     bool valid_email = false;
     while (!valid_email) {
         printf("Enter your email: ");
-        scanf("%s", email);
+        scanf("%39s", email);
         flush_input();
 
         if (validate_email(email)) {
@@ -126,21 +109,39 @@ void create_account() {
         }
     }
 
-    printf("\nEnter a new password (14 Characters Max): ");
-    scanf("%14s", password);
+    printf("Enter a new password (14 Characters Max): ");
+    scanf("%13s", password);
+    hash_password(password, hashed_password);
     flush_input();
 
     account_number = generate_unique_account_number(db);
-    account_balance = 0;
+    if (account_number == -1) {
+        printf("Error generating account number.\n");
+        sqlite3_close(db);
+        return;
+    }
 
+    insert_user(db, first_name, last_name, username, hashed_password, email, account_number, balance);
     printf("\nAccount successfully created. Your account number is %d\n", account_number);
 
-    // write_account_to_file(accounts_file, &new_account);
-
-    // fclose(accounts_file);
+    sqlite3_close(db);
 
     menu();
 };
+
+void hash_password(const char* password, char* hash_output) {
+    unsigned char hash[32];
+    EVP_MD_CTX* mdctx = EVP_MD_CTX_new();
+
+    EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL);
+    EVP_DigestUpdate(mdctx, password, strlen(password));
+    EVP_DigestFinal_ex(mdctx, hash, NULL);
+    EVP_MD_CTX_free(mdctx);
+
+    for (int i = 0; i < sizeof(hash); i++) {
+        sprintf(hash_output + (i * 2), "%02x", hash[i]);
+    }
+}
 
 bool validate_email(const char* email) {
     int at_count = 0;
@@ -165,33 +166,6 @@ bool validate_email(const char* email) {
 
     return false;
 };
-
-// bool check_duplicate(FILE* file, int account_number) {
-//     struct Account existing_account;
-//     rewind(file);
-
-//     while (fread(&existing_account, sizeof(struct Account), 1, file)) {
-//         if (existing_account.account_number == account_number) {
-//             return true;
-//         }
-//     }
-
-//     return false;
-// }
-
-// void write_account_to_file(FILE* file, struct Account* account) {
-//     if (fprintf(file, "Account Number:\n%d\nFirst Name:\n%s\nLast Name:\n%s\nUsername:\n%s\nPassword:\n%s\nEmail:\n%s\nAccount Balance:\n%d\n\n",
-//         account->account_number,
-//         account->first_name,
-//         account->last_name,
-//         account->username,
-//         account->password,
-//         account->email,
-//         account->account_balance)< 0) {
-//         fprintf(stderr, "Error writing account info to file.\n");
-//         exit(1);
-//     }
-// }
 
 void flush_input() {
     int c;
@@ -256,65 +230,3 @@ void transfer_money() {
 void manage_account() {
     printf("\nManage Account menu:\n");
 };
-
-
-/* OLD CODE
-void login(void) {
-    char input_username[30];
-    char input_password[14];
-    struct Account account;
-    FILE* file;
-
-    file = fopen("Account-Details.txt", "r");
-    if (file == NULL) {
-        fputs("Error... File does not exist", stderr);
-        exit(1);
-    }
-
-    printf("\nLogin below:\n");
-
-    flush_input();
-    printf("Username: ");
-    if (fgets(input_username, sizeof(input_username), stdin) == NULL) {
-        printf("Error reading username.\n");
-        fclose(file);
-        return;
-    }
-    input_username[strcspn(input_username, "\n")] = 0;
-
-    printf("Password: ");
-    if (fgets(input_password, sizeof(input_password), stdin) == NULL) {
-        printf("Error reading password.\n");
-        fclose(file);
-        return;
-    }
-    input_password[strcspn(input_password, "\n")] = 0;
-
-    bool login_success = false;
-    while (read_account_from_file(file, &account)) {
-        if (validate_login(&account, input_username, input_password)) {
-            printf("Login successful!\n");
-            login_success = true;
-            menu();
-            break;
-        }
-    }
-
-    if (!login_success) {
-        printf("Invalid username or password.\n");
-    }
-
-    fclose(file);
-};
-
-bool validate_login(struct Account* account, char* input_username, char* input_password) {
-    return (
-        strcmp(account->username, input_username) == 0 &&
-        strcmp(account->password, input_password) == 0
-    );
-}
-
-bool read_account_from_file(FILE* file, struct Account* account) {
-    return fread(account, sizeof(struct Account), 1, file) == 1;
-}
-*/
