@@ -79,7 +79,6 @@ void login(void) {
     if (fgets(input_username, sizeof(input_username), stdin) == NULL) {
         printf("Error reading username.\n");
         fclose(file);
-        return;
     }
     input_username[strcspn(input_username, "\n")] = 0;
 
