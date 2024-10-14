@@ -97,6 +97,7 @@ void login(void) {
         if (validate_login(&account, input_username, input_password)) {
             printf("Login successful!\n");
             login_success = true;
+            menu();
             break;
         }
     }
