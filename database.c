@@ -66,3 +66,32 @@ int verify_login(sqlite3* db, const char* username, const char* password) {
     sqlite3_finalize(stmt);
     return login_success;
 }
+
+int generate_unique_account_number(sqlite3* db) {
+    int lower = 10000000, upper = 100000000;
+    int account_number;
+    char sql[128];
+    sqlite3_stmt* stmt;
+
+    while (1) {
+        account_number = (rand() % (upper - lower + 1)) + lower;
+
+        snprintf(sql, sizeof(sql),
+            "SELECT 1 FROM Users WHERE account_number = %d;", account_number
+        );
+
+        if (sqlite3_prepare_v2(db, sql, -1, &stmt, NULL) != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
+            return -1;
+        }
+
+        if (sqlite3_step(stmt) != SQLITE_ROW) {
+            sqlite3_finalize(stmt);
+            break;
+        }
+
+        sqlite3_finalize(stmt);
+    }
+
+    return account_number;
+}
